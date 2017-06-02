@@ -6,7 +6,7 @@ class UNet():
         enc_c0 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(inputs=inputs, filters=32, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_enc_c0'),name=init+'_bn_c0'))
         enc_c1 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(inputs=enc_c0, filters=64, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_enc_c1'),name=ini+'_bn_c1'))
         enc_c2 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(inputs=enc_c1, filters=64, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_enc_c2'),name=ini+'_bn_c2'))
-        enc_c3 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(inputs=enc_c2, filters=128, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_enc_c3'),name='g_bn_c3'))
+        enc_c3 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(inputs=enc_c2, filters=128, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_enc_c3'),name=ini+'_bn_c3'))
         enc_c4 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(inputs=enc_c3, filters=128, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_enc_c4'),name=ini+'_bn_c4'))
         enc_c5 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(inputs=enc_c4, filters=256, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_enc_c5'),name=ini+'_bn_c5'))
         enc_c6 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(inputs=enc_c5, filters=256, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_enc_c6'),name=ini+'_bn_c6'))
