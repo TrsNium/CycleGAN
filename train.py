@@ -101,10 +101,7 @@ def main(args):
                     visualize()
 
                 print('    g_loss:',g_loss,'    f_loss:',f_loss,'    dx_loss',dx_loss,'    dy_loss',dy_loss,' speed:',time.time()-batch_time," batches / s")
-
-            print('--------------------------------')
-            print('epoch_num:',epoch,'    epoch_time:',time.time()-new_time)
-            print('--------------------------------')
+            print('*'*8,'\n','epoch_num:',epoch,'    epoch_time:',time.time()-new_time,'*'*8,'\n')
             saver.save(sess, "saved/model.ckpt")
 
 if __name__ == "__main__":
