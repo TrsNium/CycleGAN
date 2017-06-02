@@ -66,9 +66,9 @@ def sample(size, channel, path, batch_size, names):
     imgs = imgs.reshape((-1,size,size,channel))
     return imgs
 
-def visualize(size,  x, fakex, y, fakey, epoch, i):
+def visualize(size,  x, fakex, y, fakey, batch_size, epoch, i):
     for n in range(batch_size):
-        img = np.concatenate((x[n], fakex[n], y[n], fakey),axis=1)
+        img = np.concatenate((x[n], fakex[n], y[n], fakey[n]),axis=1)
         img = Image.fromarray(np.uint8(img))
         img.save('./visualized/epoch{}batch_num{}batch{}.jpg'.format(epoch,n,i))
 
@@ -98,7 +98,7 @@ def main(args):
                 fakeX, f_loss, _ = sess.run([train.fakeX, train.f_loss, train.opt_f], feed_dict={train.realX:realX, train.realY:realY})
 
                 if args.visualize:
-                    visualize()
+                    visualize(512, realX, fakeX, realY, fakeY, batch_size, epoch, i)
 
                 print('    g_loss:',g_loss,'    f_loss:',f_loss,'    dx_loss',dx_loss,'    dy_loss',dy_loss,' speed:',time.time()-batch_time," batches / s")
             print('*'*8,'\n','epoch_num:',epoch,'    epoch_time:',time.time()-new_time,'*'*8,'\n')
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     parser.add_argument("--xdir", dest="xdir", default="./x_data/")
     parser.add_argument("--ydir", dest="ydir", default="./y_data/")
     parser.add_argument("--epochs", dest="epochs", type=int, default=300)
-    parser.add_argument("--batch_size", dest="batch_size", type=int, default=3)
+    parser.add_argument("--batch_size", dest="batch_size", type=int, default=1)
     parser.add_argument("--data_size", dest="data_size", type=int, default=2000)
     parser.add_argument("--visualize", dest="visualize", type=bool, default=True)
     parser.add_argument("--l1_lambda", dest="l1_lambda", type=float, default=100.0)
