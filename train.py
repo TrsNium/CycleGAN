@@ -8,35 +8,35 @@ import random
 import time 
 import argparse
 
-class Train(l1_lambda, lr):
+class Train():
 
-    def __init__(self):
+    def __init__(self, l1_lambda, lr):
         self.realX = tf.placeholder(tf.float32, shape=[None,512,512,3])
         self.realY = tf.placeholder(tf.float32, shape=[None,512,512,3])
-        self.fakeY = UNet(self.realX, "g").dec_dc0
-        self.fakeX = UNet(self.realY, "f").dec_dc0
+        self.fakeY = UNet(self.realX, "g", False).dec_dc0
+        self.fakeX = UNet(self.realY, "f", False).dec_dc0
         
-        def dis_lo(img, name):
-            dis = Discriminator(img, name)
+        def dis_lo(img, name, reuse):
+            dis = Discriminator(img, name, reuse)
             logits = dis.last_h
             out = dis.out
             return logits,out
 
-        fakeY_logits, fakeY_out = dis_lo(self.fakeY, "dy")
-        realY_logits, realY_out = dis_lo(self.realY, "dy")
-        fakeX_logits, fakeX_out = dis_lo(self.fakeX, "dx")
-        realX_logits, realX_out = dis_lo(self.realX, "dx")
+        fakeY_logits, fakeY_out = dis_lo(self.fakeY, "dy", False)
+        realY_logits, realY_out = dis_lo(self.realY, "dy", True)
+        fakeX_logits, fakeX_out = dis_lo(self.fakeX, "dx", False)
+        realX_logits, realX_out = dis_lo(self.realX, "dx", True)
 
-        self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeY_logits, labels=tf.ones_like(fakeY_out)))
-                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeY, "f").dec_dc0 - self.realX))
-                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeX, "g").dec_dc0 - self.realY))
-        self.f_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeX_logits, labels=tf.ones_like(fakeX_out)))
-                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeY, "f").dec_dc0 - self.realX))
-                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeX, "g").dec_dc0 - self.realY))
+        self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeY_logits, labels=tf.ones_like(fakeY_out)))\
+                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeY, "f", True).dec_dc0 - self.realX))\
+                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeX, "g", True).dec_dc0 - self.realY))
+        self.f_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeX_logits, labels=tf.ones_like(fakeX_out)))\
+                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeY, "f", True).dec_dc0 - self.realX))\
+                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeX, "g", True).dec_dc0 - self.realY))
         
-        self.dx_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeX_logits, labels=tf.zeros_like(fakeX_out)))
+        self.dx_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeX_logits, labels=tf.zeros_like(fakeX_out)))\
                                 + tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=realX_logits, labels=tf.ones_like(realX_out)))
-        self.dy_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeY_logits, labels=tf.zeros_like(fakeY_out)))
+        self.dy_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeY_logits, labels=tf.zeros_like(fakeY_out)))\
                                 + tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=realY_logits, labels=tf.ones_like(realY_out)))
 
         training_var = tf.trainable_variables()
@@ -114,6 +114,6 @@ if __name__ == "__main__":
     parser.add_argument("--data_size", dest="data_size", type=int, default=2000)
     parser.add_argument("--visualize", dest="visualize", type=bool, default=True)
     parser.add_argument("--l1_lambda", dest="l1_lambda", type=float, default=100.0)
-    args= parser.parse_args
+    args= parser.parse_args()
 
     main(args)
