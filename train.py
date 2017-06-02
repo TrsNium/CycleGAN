@@ -14,37 +14,40 @@ class Train():
         self.realY = tf.placeholder(tf.float32, shape=[None,512,512,3])
         self.fakeY = UNet(self.realX, "g").dec_dc0
         self.fakeX = UNet(self.realY, "f").dec_dc0
+        
+        def dis_lo(img, name):
+            dis = Discriminator(img, name)
+            logits = dis.last_h
+            out = dis.out
+            return logits,out
 
-        dis_fakey = Discriminator(self.fakeY, "dy")
-        fakey_logits = dis_fakey.last_h
-        fakey_out = dis_fakey.out
+        fakeY_logits, fakeY_out = dis_lo(self.fakeY, "dy")
+        realY_logits, realY_out = dis_lo(self.realY, "dy")
+        fakeX_logits, fakeX_out = dis_lo(self.fakeX, "dx")
+        realX_logits, realX_out = dis_lo(self.realX, "dx")
 
-        dis_fakex = Discriminator(self.fakeX, "dx")
-        fakex_logits = dis_fakex.last_h
-        fakex_out = dis_fakex.out
-
-        g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakey_logits, labels=tf.ones_like(fakey_out))\
-                                + 100*tf.reduce_mean(tf.abs(UNet(self.fakeY, "f").dec_dc0 - self.realX))\
+        self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeY_logits, labels=tf.ones_like(fakeY_out)))
+                                + 100*tf.reduce_mean(tf.abs(UNet(self.fakeY, "f").dec_dc0 - self.realX))
                                 + 100*tf.reduce_mean(tf.abs(UNet(self.fakeX, "g").dec_dc0 - self.realY))
-        f_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakex_logits, labels=tf.ones_like(fakex_out))\
-                                + 100*tf.reduce_mean(tf.abs(UNet(self.fakeY, "f").dec_dc0 - self.realX))\
+        self.f_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeX_logits, labels=tf.ones_like(fakeX_out)))
+                                + 100*tf.reduce_mean(tf.abs(UNet(self.fakeY, "f").dec_dc0 - self.realX))
                                 + 100*tf.reduce_mean(tf.abs(UNet(self.fakeX, "g").dec_dc0 - self.realY))
         
-        #discriminator
-        dis_r = Discriminator(realAB, False)
-        real_logits = dis_r.last_h
-        real_out = dis_r.out
-
-        dis_f = Discriminator(fakeAB, True)
-        fake_logits = dis_f.last_h
-        fake_out = dis_f.out
+        self.dx_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeX_logits, labels=tf.zeros_like(fakeX_out)))
+                                + tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=realX_logits, labels=tf.ones_like(realX_out)))
+        self.dy_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeY_logits, labels=tf.zeros_like(fakeY_out)))
+                                + tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=realY_logits, labels=tf.ones_like(realY_out)))
 
         training_var = tf.trainable_variables()
-        d_var = [var for var in training_var if 'd_' in var.name]
         g_var = [var for var in training_var if 'g_' in var.name]
+        f_var = [var for var in training_var if 'f_' in var.name]
+        dx_var = [var for var in training_var if 'dx_' in var.name]
+        dy_var = [var for var in training_var if 'dy_' in var.name]
 
-        self.opt_d = tf.train.AdamOptimizer(0.0002,beta1=0.5).minimize(self.d_loss, var_list=d_var)
         self.opt_g = tf.train.AdamOptimizer(0.0002,beta1=0.5).minimize(self.g_loss, var_list=g_var)
+        self.opt_f = tf.train.AdamOptimizer(0.0002,beta1=0.5).minimize(self.f_loss, var_list=f_var)
+        self.opt_dx = tf.train.AdamOptimizer(0.0002,beta1=0.5).minimize(self.dx_loss, var_list=dx_var)
+        self.opt_dy = tf.train.AdamOptimizer(0.0002,beta1=0.5).minimize(self.dy_loss, var_list=dy_var)
 
 if not os.path.exists('./saved/'):
     os.mkdir('./saved/')
@@ -89,11 +92,13 @@ def main():
                 linedraw512 = sample(512, 3, './data/linedraw512/', batch_files)
             
                 batch_time = time.time()
-                d_loss, _ = sess.run([train.d_loss,train.opt_d],{train.realA:rgb512,train.realB:linedraw512})  
-                g_img, g_loss, _ = sess.run([train.fakeA,train.g_loss,train.opt_g],{train.realA:rgb512,train.realB:linedraw512})
-             
-                visualize_g(512, g_img, linedraw512, rgb512, batch_size, epoch, i)
-                print('    g_loss:',g_loss,'    d_loss:',d_loss,' speed:',time.time()-batch_time," batches / s")
+                dx_loss, _ = sess.run([train.dx_loss, train.opt_dx], feed_dict={train.realX:rgb512, train.realY:linedraw512})
+                dy_loss, _ = sess.run([train.dy_loss, train.opt_dy], feed_dict={train.realX:rgb512, train.realY:linedraw512})
+                g_loss, _ = sess.run([train.g_loss, train.opt_g], feed_dict={train.realX:rgb512, train.realY:linedraw512})
+                f_loss, _ = sess.run([train.f_loss, train.opt_f], feed_dict={train.realX:rgb512, train.realY:linedraw512})
+
+
+                print('    g_loss:',g_loss,'    f_loss:',f_loss,'    dx_loss',dx_loss,'    dy_loss',dy_loss,' speed:',time.time()-batch_time," batches / s")
 
             print('--------------------------------')
             print('epoch_num:',epoch,'    epoch_time:',time.time()-new_time)
