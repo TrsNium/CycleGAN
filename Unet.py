@@ -3,7 +3,7 @@ import numpy as np
 
 class UNet():
     def __init__(self, inputs, ini, reuse):
-        with tf.variable_scope(ini+"genereter"):
+        with tf.variable_scope(ini+"_genereter"):
             if reuse:
                 tf.get_variable_scope().reuse_variables()
             else:

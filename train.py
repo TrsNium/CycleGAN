@@ -27,10 +27,10 @@ class Train():
         fakeX_logits, fakeX_out = dis_lo(self.fakeX, "dx", False)
         realX_logits, realX_out = dis_lo(self.realX, "dx", True)
 
-        self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeY_logits, labels=tf.ones_like(fakeY_out)))\
+        self.g_loss = tf.reduce_mean((fakeY_logits - tf.ones_like(fakeY_out))**2)\
                                 + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeY, "f", True).dec_dc0 - self.realX))\
                                 + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeX, "g", True).dec_dc0 - self.realY))
-        self.f_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeX_logits, labels=tf.ones_like(fakeX_out)))\
+        self.f_loss = tf.reduce_mean((fakeX_logits - tf.ones_like(fakeX_out)**2))\
                                 + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeY, "f", True).dec_dc0 - self.realX))\
                                 + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeX, "g", True).dec_dc0 - self.realY))
         
@@ -39,10 +39,10 @@ class Train():
         fakeX_sample_logits, fakeX_sample_out = dis_lo(self.fakeX_sample, "dx", True)
         fakeY_sample_logits, fakeY_sample_out = dis_lo(self.fakeY_sample, "dy", True)
         
-        self.dx_loss = (tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeX_sample_logits, labels=tf.zeros_like(fakeX_sample_out)))\
-                                + tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=realX_logits, labels=tf.ones_like(realX_out))))/2
-        self.dy_loss = (tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeY_sample_logits, labels=tf.zeros_like(fakeY_sample_out)))\
-                                + tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=realY_logits, labels=tf.ones_like(realY_out))))/2
+        self.dx_loss = (tf.reduce_mean((fakeX_sample_logits - tf.zeros_like(fakeX_sample_out))**2)\
+                                + tf.reduce_mean((realY_logits - tf.ones_like(realY_out))**2))/2
+        self.dy_loss = (tf.reduce_mean((fakeY_sample_logits - tf.zeros_like(fakeY_sample_out))**2)\
+                                + tf.reduce_mean((realY_logits - tf.ones_like(realY_out))**2))/2
 
         training_var = tf.trainable_variables()
         g_var = [var for var in training_var if 'g_' in var.name]
@@ -95,14 +95,13 @@ def main(args):
             for i in range(0, data_size, batch_size):                
                 realX = sample(512, 3, args.xdir, batch_size, x_filenames)
                 realY = sample(512, 3, args.ydir, batch_size, y_filenames)
-                fakeX_sample = sample(512, 3, args.ydir, batch_size, y_filenames)
-                fakeY_sample = sample(512, 3, args.xdir, batch_size, x_filenames)
-
+            
                 batch_time = time.time()
-                dx_loss, _ = sess.run([train.dx_loss, train.opt_dx], feed_dict={train.realX:realX, train.realY:realY, train.fakeX_sample:fakeX_sample, train.fakeY_sample:fakeY_sample})
-                dy_loss, _ = sess.run([train.dy_loss, train.opt_dy], feed_dict={train.realX:realX, train.realY:realY, train.fakeX_sample:fakeX_sample, train.fakeY_sample:fakeY_sample})
-                fakeY, g_loss, _ = sess.run([train.fakeY, train.g_loss, train.opt_g], feed_dict={train.realX:realX, train.realY:realY, train.fakeX_sample:fakeX_sample, train.fakeY_sample:fakeY_sample})
-                fakeX, f_loss, _ = sess.run([train.fakeX, train.f_loss, train.opt_f], feed_dict={train.realX:realX, train.realY:realY, train.fakeX_sample:fakeX_sample, train.fakeY_sample:fakeY_sample})
+                fakeX_, fakeY_ = sess.run([train.fakeX, train.fakeY], feed_dict={train.realX:realX, train.realY:realY})
+                dx_loss, _ = sess.run([train.dx_loss, train.opt_dx], feed_dict={train.realX:realX, train.realY:realY, train.fakeX_sample:fakeX_, train.fakeY_sample:fakeY_})
+                dy_loss, _ = sess.run([train.dy_loss, train.opt_dy], feed_dict={train.realX:realX, train.realY:realY, train.fakeX_sample:fakeX_, train.fakeY_sample:fakeY_})
+                fakeY, g_loss, _ = sess.run([train.fakeY, train.g_loss, train.opt_g], feed_dict={train.realX:realX, train.realY:realY, train.fakeX_sample:fakeX_, train.fakeY_sample:fakeY_})
+                fakeX, f_loss, _ = sess.run([train.fakeX, train.f_loss, train.opt_f], feed_dict={train.realX:realX, train.realY:realY, train.fakeX_sample:fakeX_, train.fakeY_sample:fakeY_})
 
                 if args.visualize:
                     visualize(512, realX, fakeX, realY, fakeY, batch_size, epoch, i)

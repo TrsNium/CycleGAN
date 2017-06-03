@@ -3,7 +3,7 @@ from Unet import UNet
 
 class Discriminator():
     def __init__(self, image, ini, reuse=False):
-        with tf.variable_scope(ini+"discriminator") as scope:
+        with tf.variable_scope(ini+"_discriminator") as scope:
             if reuse:
                 tf.get_variable_scope().reuse_variables()
             else:
