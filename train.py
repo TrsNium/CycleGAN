@@ -39,7 +39,7 @@ class Train():
         fakeY_sample_out = dis_lo(self.fakeY_sample, "dy", True)
         
         self.dx_loss = (tf.reduce_mean((fakeX_sample_out - tf.zeros_like(fakeX_sample_out))**2)\
-                                + tf.reduce_mean((realY_out - tf.ones_like(realY_out))**2))/2
+                                + tf.reduce_mean((realX_out - tf.ones_like(realX_out))**2))/2
         self.dy_loss = (tf.reduce_mean((fakeY_sample_out - tf.zeros_like(fakeY_sample_out))**2)\
                                 + tf.reduce_mean((realY_out - tf.ones_like(realY_out))**2))/2
 
