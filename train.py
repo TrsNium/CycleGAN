@@ -43,11 +43,13 @@ class Train():
         f_var = [var for var in training_var if 'f_' in var.name]
         dx_var = [var for var in training_var if 'dx_' in var.name]
         dy_var = [var for var in training_var if 'dy_' in var.name]
-
+        
         self.opt_g = tf.train.AdamOptimizer(lr,beta1=0.5).minimize(self.g_loss, var_list=g_var)
         self.opt_f = tf.train.AdamOptimizer(lr,beta1=0.5).minimize(self.f_loss, var_list=f_var)
         self.opt_dx = tf.train.AdamOptimizer(lr,beta1=0.5).minimize(self.dx_loss, var_list=dx_var)
         self.opt_dy = tf.train.AdamOptimizer(lr,beta1=0.5).minimize(self.dy_loss, var_list=dy_var)
+        for var in tf.trainable_variables(): print(var.name)
+
 
 if not os.path.exists('./saved/'):
     os.mkdir('./saved/')

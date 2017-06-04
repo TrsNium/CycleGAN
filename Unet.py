@@ -21,14 +21,14 @@ class UNet():
             enc_c7 = tf.nn.relu(self.instance_norm(tf.layers.conv2d(inputs=enc_c6, filters=512, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_enc_c7'), "g_bn_c7"))
             enc_c8 = tf.nn.relu(self.instance_norm(tf.layers.conv2d(inputs=enc_c7, filters=512, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_enc_c8'), "g_bn_c8"))
 
-            dec_dc8 = tf.nn.relu(self.instance_norm(tf.layers.conv2d_transpose(tf.concat([enc_c7,enc_c8],3), filters=512, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_dec_dc8'), "g_bn_dc8"))
-            dec_dc7 = tf.nn.relu(self.instance_norm(tf.layers.conv2d(dec_dc8, filters=256, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_dec_dc7'), "g_bn_dc7"))
-            dec_dc6 = tf.nn.relu(self.instance_norm(tf.layers.conv2d_transpose(tf.concat([enc_c6,dec_dc7],3), filters=256, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_dec_dc6'), "g_bn_dc6"))
-            dec_dc5 = tf.nn.relu(self.instance_norm(tf.layers.conv2d(dec_dc6, filters=128, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_dec_dc5'), "g_bn_dc5"))
-            dec_dc4 = tf.nn.relu(self.instance_norm(tf.layers.conv2d_transpose(tf.concat([enc_c4,dec_dc5],3), filters=128, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_dec_dc4'), "g_bn_dc4"))
-            dec_dc3 = tf.nn.relu(self.instance_norm(tf.layers.conv2d(dec_dc4, filters=64, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_dec_dc3'), "g_bn_dc3"))
-            dec_dc2 = tf.nn.relu(self.instance_norm(tf.layers.conv2d_transpose(tf.concat([enc_c2,dec_dc3],3), filters=64, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_dec_dc2'), "g_bn_dc2"))
-            dec_dc1 = tf.nn.relu(self.instance_norm(tf.layers.conv2d(dec_dc2, filters=32, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_dec_dc1'), "g_bn_dc1"))
+            dec_dc8 = tf.nn.relu(tf.layers.batch_normalization((tf.layers.conv2d_transpose(tf.concat([enc_c7,enc_c8],3), filters=512, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_dec_dc8'), "g_bn_dc8"))
+            dec_dc7 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(dec_dc8, filters=256, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_dec_dc7'), "g_bn_dc7"))
+            dec_dc6 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.concat([enc_c6,dec_dc7],3), filters=256, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_dec_dc6'), "g_bn_dc6"))
+            dec_dc5 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(dec_dc6, filters=128, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_dec_dc5'), "g_bn_dc5"))
+            dec_dc4 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.concat([enc_c4,dec_dc5],3), filters=128, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_dec_dc4'), "g_bn_dc4"))
+            dec_dc3 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(dec_dc4, filters=64, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_dec_dc3'), "g_bn_dc3"))
+            dec_dc2 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.concat([enc_c2,dec_dc3],3), filters=64, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_dec_dc2'), "g_bn_dc2"))
+            dec_dc1 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(dec_dc2, filters=32, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_dec_dc1'), "g_bn_dc1"))
             self.dec_dc0 = tf.layers.conv2d(tf.concat([enc_c0,dec_dc1],3), filters=3, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_dec_dc0')
 
     def instance_norm(self, input, name="instance_norm"):
