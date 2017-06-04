@@ -3,8 +3,6 @@ from Unet import UNet
 
 class Discriminator():
     def __init__(self, image, ini, reuse=False):
-        self.ini = ini
-        self.reuse = reuse
         with tf.variable_scope(ini+"_discriminator") as scope:
             if reuse:
                 tf.get_variable_scope().reuse_variables()
@@ -20,10 +18,10 @@ class Discriminator():
         return tf.maximum(x, leak * x)
 
     def instance_norm(self, input, name="_instance_norm"):
-        with tf.variable_scope(self.ini+name) as scope:
+        with tf.variable_scope(name) as scope:
             depth = input.get_shape()[3]
-            scale = tf.get_variable(self.ini+"scale", [depth], initializer=tf.random_normal_initializer(1.0, 0.02, dtype=tf.float32))
-            offset = tf.get_variable(self.ini+"offset", [depth], initializer=tf.constant_initializer(0.0))
+            scale = tf.get_variable("scale", [depth], initializer=tf.random_normal_initializer(1.0, 0.02, dtype=tf.float32))
+            offset = tf.get_variable("offset", [depth], initializer=tf.constant_initializer(0.0))
             mean, variance = tf.nn.moments(input, axes=[1,2], keep_dims=True)
             epsilon = 1e-5
             inv = tf.rsqrt(variance + epsilon)

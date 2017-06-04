@@ -3,8 +3,6 @@ import numpy as np
 
 class UNet():
     def __init__(self, inputs, ini, reuse):
-        self.ini = ini
-        self.reuse = reuse
         with tf.variable_scope(ini+"_genereter"):
             if reuse:
                 tf.get_variable_scope().reuse_variables()
@@ -34,8 +32,8 @@ class UNet():
     def instance_norm(self, input, name="instance_norm"):
         with tf.variable_scope(name):
             depth = input.get_shape()[3]
-            scale = tf.get_variable(self.ini+"scale", [depth], initializer=tf.random_normal_initializer(1.0, 0.02, dtype=tf.float32))
-            offset = tf.get_variable(self.ini+"offset", [depth], initializer=tf.constant_initializer(0.0))
+            scale = tf.get_variable("scale", [depth], initializer=tf.random_normal_initializer(1.0, 0.02, dtype=tf.float32))
+            offset = tf.get_variable("offset", [depth], initializer=tf.constant_initializer(0.0))
             mean, variance = tf.nn.moments(input, axes=[1,2], keep_dims=True)
             epsilon = 1e-5
             inv = tf.rsqrt(variance + epsilon)
