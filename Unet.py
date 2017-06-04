@@ -26,7 +26,7 @@ class UNet():
             dec_dc4 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.concat([enc_c4,dec_dc5],3), filters=128, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_dec_dc4')))
             dec_dc3 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(dec_dc4, filters=64, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_dec_dc3')))
             dec_dc2 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.concat([enc_c2,dec_dc3],3), filters=64, kernel_size=[4,4], strides=(2,2), padding='SAME', name=ini+'_dec_dc2')))
-            dec_dc1 = tf.nn.relu(tf.layers.conv2d(dec_dc2, filters=32, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_dec_dc1'))
+            dec_dc1 = tf.nn.relu(tf.layers.batch_normalization(tf.layers.conv2d(dec_dc2, filters=32, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_dec_dc1')))
             self.dec_dc0 = tf.layers.conv2d(tf.concat([enc_c0,dec_dc1],3), filters=3, kernel_size=[3,3], strides=(1,1), padding='SAME', name=ini+'_dec_dc0')
 
     def instance_norm(self, input, name="instance_norm"):
