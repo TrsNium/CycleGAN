@@ -112,7 +112,7 @@ if __name__ == "__main__":
     parser.add_argument("--ydir", dest="ydir", default="./y_data/")
     parser.add_argument("--epochs", dest="epochs", type=int, default=300)
     parser.add_argument("--batch_size", dest="batch_size", type=int, default=1)
-    parser.add_argument("--data_size", dest="data_size", type=int, default=2000)
+    parser.add_argument("--data_size", dest="data_size", type=int, default=1000)
     parser.add_argument("--visualize", dest="visualize", type=bool, default=True)
     parser.add_argument("--l1_lambda", dest="l1_lambda", type=float, default=100.0)
     args= parser.parse_args()
