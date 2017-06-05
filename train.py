@@ -48,7 +48,6 @@ class Train():
         self.opt_f = tf.train.AdamOptimizer(lr,beta1=0.5).minimize(self.f_loss, var_list=f_var)
         self.opt_dx = tf.train.AdamOptimizer(lr,beta1=0.5).minimize(self.dx_loss, var_list=dx_var)
         self.opt_dy = tf.train.AdamOptimizer(lr,beta1=0.5).minimize(self.dy_loss, var_list=dy_var)
-        for var in tf.trainable_variables(): print(var.name)
 
 
 if not os.path.exists('./saved/'):
