@@ -13,25 +13,25 @@ class Train():
     def __init__(self, l1_lambda, lr):
         self.realX = tf.placeholder(tf.float32, shape=[None,512,512,3])
         self.realY = tf.placeholder(tf.float32, shape=[None,512,512,3])
-        self.fakeY = UNet(self.realX, "g", False).dec_dc0
-        self.fakeX = UNet(self.realY, "f", False).dec_dc0
+        self.fakeY = UNet(self.realX, "genereterY", False).dec_dc0
+        self.fakeX = UNet(self.realY, "genereterX", False).dec_dc0
         
         def dis_lo(img, name, reuse):
             dis = Discriminator(img, name, reuse)
             out = dis.out
             return out
 
-        fakeY_out = dis_lo(self.fakeY, "dy", False)
-        realY_out = dis_lo(self.realY, "dy", True)
-        fakeX_out = dis_lo(self.fakeX, "dx", False)
-        realX_out = dis_lo(self.realX, "dx", True)
+        fakeY_out = dis_lo(self.fakeY, "discriminatorY", False)
+        realY_out = dis_lo(self.realY, "discriminatorY", True)
+        fakeX_out = dis_lo(self.fakeX, "discriminatorX", False)
+        realX_out = dis_lo(self.realX, "discriminatorX", True)
 
         self.g_loss = tf.reduce_mean((fakeY_out - tf.ones_like(fakeY_out))**2)\
-                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeY, "f", True).dec_dc0 - self.realX))\
-                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeX, "g", True).dec_dc0 - self.realY))
+                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeY, "genereterX", True).dec_dc0 - self.realX))\
+                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeX, "genereterY", True).dec_dc0 - self.realY))
         self.f_loss = tf.reduce_mean((fakeX_out - tf.ones_like(fakeX_out)**2))\
-                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeY, "f", True).dec_dc0 - self.realX))\
-                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeX, "g", True).dec_dc0 - self.realY))
+                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeY, "genereterX", True).dec_dc0 - self.realX))\
+                                + l1_lambda*tf.reduce_mean(tf.abs(UNet(self.fakeX, "genereterY", True).dec_dc0 - self.realY))
         
         self.dx_loss = (tf.reduce_mean((fakeX_out - tf.zeros_like(fakeX_out))**2)\
                                 + tf.reduce_mean((realX_out - tf.ones_like(realX_out))**2))/2
@@ -39,10 +39,10 @@ class Train():
                                 + tf.reduce_mean((realY_out - tf.ones_like(realY_out))**2))/2
 
         training_var = tf.trainable_variables()
-        g_var = [var for var in training_var if 'g_' in var.name]
-        f_var = [var for var in training_var if 'f_' in var.name]
-        dx_var = [var for var in training_var if 'dx_' in var.name]
-        dy_var = [var for var in training_var if 'dy_' in var.name]
+        g_var = [var for var in training_var if 'genereterY' in var.name]
+        f_var = [var for var in training_var if 'genereterX' in var.name]
+        dx_var = [var for var in training_var if 'discriminatorX' in var.name]
+        dy_var = [var for var in training_var if 'discriminatorY' in var.name]
         
         self.opt_g = tf.train.AdamOptimizer(lr,beta1=0.5).minimize(self.g_loss, var_list=g_var)
         self.opt_f = tf.train.AdamOptimizer(lr,beta1=0.5).minimize(self.f_loss, var_list=f_var)
