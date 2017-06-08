@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
-from Unet import UNet
-from discriminator import Discriminator
+from Unet import UNet1 as UNet
+from discriminator import Discriminator1 as Discriminator
 import os
 from PIL import Image
 import random
@@ -11,8 +11,8 @@ import argparse
 class Train():
 
     def __init__(self, l1_lambda, lr):
-        self.realX = tf.placeholder(tf.float32, shape=[None,512,512,3])
-        self.realY = tf.placeholder(tf.float32, shape=[None,512,512,3])
+        self.realX = tf.placeholder(tf.float32, shape=[None,256,256,3])
+        self.realY = tf.placeholder(tf.float32, shape=[None,256,256,3])
         self.fakeY = UNet(self.realX, "genereterY", False).dec_dc0
         self.fakeX = UNet(self.realY, "genereterX", False).dec_dc0
         
@@ -88,8 +88,8 @@ def main(args):
         for epoch in range(epochs):
             new_time = time.time() 
             for i in range(0, data_size, batch_size):                
-                realX = sample(512, 3, args.xdir, batch_size, x_filenames)
-                realY = sample(512, 3, args.ydir, batch_size, y_filenames)
+                realX = sample(256, 3, args.xdir, batch_size, x_filenames)
+                realY = sample(256, 3, args.ydir, batch_size, y_filenames)
             
                 batch_time = time.time()
                 fakeX, f_loss, _ = sess.run([train.fakeX, train.f_loss, train.opt_f], feed_dict={train.realX:realX, train.realY:realY})  
@@ -98,7 +98,7 @@ def main(args):
                 dy_loss, _ = sess.run([train.dy_loss, train.opt_dy], feed_dict={train.realX:realX, train.realY:realY})               
 
                 if args.visualize:
-                    visualize(512, realX, fakeX, realY, fakeY, batch_size, epoch, i)
+                    visualize(256, realX, fakeX, realY, fakeY, batch_size, epoch, i)
 
                 print(i,':','    g_loss:',g_loss,'    f_loss:',f_loss,'    dx_loss',dx_loss,'    dy_loss',dy_loss,' speed:',time.time()-batch_time," batches / s")
             print('*'*16,'\n','epoch_num:',epoch,'    epoch_time:',time.time()-new_time,"\n",'*'*16,'\n')
@@ -107,11 +107,11 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("--lr", dest="lr", type=float, default= 0.0002)
-    parser.add_argument("--xdir", dest="xdir", default="./x_data/")
-    parser.add_argument("--ydir", dest="ydir", default="./y_data/")
+    parser.add_argument("--xdir", dest="xdir", default="./Adir/")
+    parser.add_argument("--ydir", dest="ydir", default="./Bdir/")
     parser.add_argument("--epochs", dest="epochs", type=int, default=300)
     parser.add_argument("--batch_size", dest="batch_size", type=int, default=1)
-    parser.add_argument("--data_size", dest="data_size", type=int, default=1000)
+    parser.add_argument("--data_size", dest="data_size", type=int, default=550)
     parser.add_argument("--visualize", dest="visualize", type=bool, default=True)
     parser.add_argument("--l1_lambda", dest="l1_lambda", type=float, default=50.0)
     args= parser.parse_args()

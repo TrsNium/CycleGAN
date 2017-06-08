@@ -1,5 +1,6 @@
 import tensorflow as tf
 from Unet import UNet
+from util import *
 
 class Discriminator():
     def __init__(self, image, ini, reuse=False):
@@ -27,3 +28,18 @@ class Discriminator():
             inv = tf.rsqrt(variance + epsilon)
             normalized = (input-mean)*inv
             return scale*normalized + offset
+
+class Discriminator1():
+    def __init__(self, x, name, reuse=False):
+        with tf.variable_scope(name) as scope:
+            if reuse:
+                tf.get_variable_scope().reuse_variables()
+            else:
+                assert tf.get_variable_scope().reuse == False
+
+            h0 = tf.layers.conv2d(x, filters=64, kernel_size=[4,4], strides=(2,2), padding='SAME',name='d_h0_conv')
+            h1 = tf.layers.batch_normalization(lrelu(tf.layers.conv2d(h0, filters=128, kernel_size=[4,4], strides=(2,2), padding='SAME', name='d_h1_conv')), name="d_bn_h1")
+            h2 = tf.layers.batch_normalization(lrelu(tf.layers.conv2d(h1, filters=256, kernel_size=[4,4], strides=(2,2), padding='SAME', name='d_h2_conv')), name="d_bn_h2")
+            h3 = tf.layers.batch_normalization(lrelu(tf.layers.conv2d(h2, filters=512, kernel_size=[4,4], strides=(1,1), padding='SAME', name='d_h3_conv')), name="d_bn_h3")
+            out_ = tf.layers.conv2d(h3, filters = 1, kernel_size=[4,4], strides=(1,1), name='d_out_conv')
+            self.out= tf.nn.sigmoid(out_)

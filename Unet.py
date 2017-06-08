@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+from util import *
 
 class UNet():
     def __init__(self, inputs, ini, reuse):
@@ -39,3 +40,29 @@ class UNet():
             inv = tf.rsqrt(variance + epsilon)
             normalized = (input-mean)*inv
             return scale*normalized + offset
+
+class UNet1():
+    def __init__(self, x, name, reuse=False):
+        with tf.variable_scope(name):
+            if reuse:
+                tf.get_variable_scope().reuse_variables()
+            else:
+                assert tf.get_variable_scope().reuse == False
+
+            e0 = tf.layers.batch_normalization(tf.layers.conv2d(x, filters=64, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_conv_enc0"))
+            e1 = tf.layers.batch_normalization(tf.layers.conv2d(lrelu(e0), filters=128, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_conv_e1"))
+            e2 = tf.layers.batch_normalization(tf.layers.conv2d(lrelu(e1), filters=256, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_conv_e2"))
+            e3 = tf.layers.batch_normalization(tf.layers.conv2d(lrelu(e2), filters=512, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_conv_e3"))
+            e4 = tf.layers.batch_normalization(tf.layers.conv2d(lrelu(e3), filters=512, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_conv_e4"))
+            e5 = tf.layers.batch_normalization(tf.layers.conv2d(lrelu(e4), filters=512, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_conv_e5"))
+            e6 = tf.layers.batch_normalization(tf.layers.conv2d(lrelu(e5), filters=512, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_conv_e6"))
+            e7 = tf.layers.batch_normalization(tf.layers.conv2d(lrelu(e6), filters=512, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_conv_e7"))
+            d0 = tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.nn.relu(e7), filters=512, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_dec_d0"))
+            d1 = tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.nn.relu(tf.concat([d0,e6], axis=3)), filters=512, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_dec_d1"))
+            d2 = tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.nn.relu(tf.concat([d1,e5], axis=3)), filters=512, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_dec_d2"))
+            d3 = tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.nn.relu(tf.concat([d2,e4], axis=3)), filters=512, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_dec_d3"))
+            d4 = tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.nn.relu(tf.concat([d3,e3], axis=3)), filters=256, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_dec_d4"))
+            d5 = tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.nn.relu(tf.concat([d4,e2], axis=3)), filters=128, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_dec_d5"))
+            d6 = tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.nn.relu(tf.concat([d5,e1], axis=3)), filters=64, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_dec_d6"))
+            d7 = tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.nn.relu(tf.concat([d6,e0], axis=3)), filters=3, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_dec_d7"))
+            self.dec_dc0 = d7
