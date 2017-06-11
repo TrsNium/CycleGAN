@@ -56,14 +56,16 @@ class model():
             for l in range(self.args.itrs):
 
                 realX, realY = sample_X_Y(256, 3, self.args.Xdir, self.args.Ydir, self.args.batch_size)
-                fakeX, f_loss, _ = sess.run([self.fakeX, self.f_loss, opt_f], feed_dict={self.realX:realX, self.realY:realY})
+                f_loss, _ = sess.run([self.f_loss, opt_f], feed_dict={self.realX:realX, self.realY:realY})
+                f_loss, _ = sess.run([self.f_loss, opt_f], feed_dict={self.realX:realX, self.realY:realY})
 
                 realX, realY = sample_X_Y(256, 3, self.args.Xdir, self.args.Ydir, self.args.batch_size)
                 dx_loss, _ = sess.run([self.dx_loss, opt_dx], feed_dict={self.realX:realX, self.realY:realY})
 
                 realX, realY = sample_X_Y(256, 3, self.args.Xdir, self.args.Ydir, self.args.batch_size) 
-                fakeY, g_loss, _ = sess.run([self.fakeY, self.g_loss, opt_g], feed_dict={self.realX:realX, self.realY:realY})
-
+                g_loss, _ = sess.run([self.g_loss, opt_g], feed_dict={self.realX:realX, self.realY:realY})
+                g_loss, _ = sess.run([self.g_loss, opt_g], feed_dict={self.realX:realX, self.realY:realY})   
+ 
                 realX, realY = sample_X_Y(256, 3, self.args.Xdir, self.args.Ydir, self.args.batch_size) 
                 dy_loss, _ = sess.run([self.dy_loss, opt_dy], feed_dict={self.realX:realX, self.realY:realY})               
 
@@ -96,6 +98,7 @@ class model():
             h3 = tf.layers.batch_normalization(self.lrelu(tf.layers.conv2d(h2, filters=512, kernel_size=[4,4], strides=(2,2), padding='SAME', name='d_h3_conv', reuse=reuse)), name="d_bn_h3")
             h4 = tf.layers.batch_normalization(self.lrelu(tf.layers.conv2d(h3, filters=512, kernel_size=[4,4], strides=(2,2), padding='SAME', name='d_h4_conv', reuse=reuse)), name="d_bn_h4")
             out = tf.layers.dense(tf.reshape(h4,[-1,8*8*512]), 1, name='d_dense_layer', reuse=reuse)
+            #out = tf.layers.conv2d(self.lrelu(h4), 1, kernel_size=[4,4], strides=(1,1), padding='SAME', name='d_out_conv', reuse=reuse)
             return out
 
     def genereter(self, x, name, reuse=False):
@@ -126,8 +129,8 @@ class model():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("--lr", dest="lr", type=float, default= 0.0002)
-    parser.add_argument("--xdir", dest="Xdir", default="./Xdir/")
-    parser.add_argument("--ydir", dest="Ydir", default="./Ydir/")
+    parser.add_argument("--xdir", dest="Xdir", default="./Xdir_256/")
+    parser.add_argument("--ydir", dest="Ydir", default="./Ydir_256/")
     parser.add_argument("--itrs", dest="itrs", type=int, default=3000000)
     parser.add_argument("--batch_size", dest="batch_size", type=int, default=1)
     parser.add_argument("--visualize", dest="visualize", type=bool, default=True)
