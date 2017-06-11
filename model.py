@@ -21,17 +21,17 @@ class model():
         fakeX_out = self.discriminator(self.fakeX, "DiscriminatorX", False)
         realX_out = self.discriminator(self.realX, "DiscriminatorX", True)
 
-        self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeY_out, labels=tf.ones_like(fakeY_out)))\
+        self.g_loss = tf.reduce_mean(tf.square(fakeY_out - tf.ones_like(fakeY_out)))\
                                 + self.args.l1_lambda*tf.reduce_mean(tf.abs(fakeX_ - self.realX))\
                                 + self.args.l1_lambda*tf.reduce_mean(tf.abs(fakeY_ - self.realY))
-        self.f_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeX_out, labels=tf.ones_like(fakeX_out)))\
+        self.f_loss = tf.reduce_mean(tf.square(fakeX_out - tf.ones_like(fakeX_out)))\
                                 + self.args.l1_lambda*tf.reduce_mean(tf.abs(fakeX_ - self.realX))\
                                 + self.args.l1_lambda*tf.reduce_mean(tf.abs(fakeY_ - self.realY))
         
-        self.dx_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeX_out, labels=tf.zeros_like(fakeX_out)))\
-                                + tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=realX_out, labels=tf.ones_like(realX_out)))
-        self.dy_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fakeY_out, labels=tf.zeros_like(fakeY_out)))\
-                                + tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=realY_out, labels=tf.ones_like(realY_out)))
+        self.dx_loss = (tf.reduce_mean(tf.square(fakeX_out - tf.zeros_like(fakeX_out)))\
+                                + tf.reduce_mean(tf.square(realX_out - tf.ones_like(realX_out))))/2
+        self.dy_loss = (tf.reduce_mean(tf.square(fakeY_out - tf.zeros_like(fakeY_out)))\
+                                + tf.reduce_mean(tf.square(realY_out - tf.ones_like(realY_out))))/2
 
         training_var = tf.trainable_variables()
         self.g_var = [var for var in training_var if 'GenereterY' in var.name]
@@ -95,10 +95,8 @@ class model():
             h0 = tf.layers.conv2d(x, filters=64, kernel_size=[4,4], strides=(2,2), padding='SAME',name='d_h0_conv', reuse=reuse)
             h1 = tf.layers.batch_normalization(self.lrelu(tf.layers.conv2d(h0, filters=128, kernel_size=[4,4], strides=(2,2), padding='SAME', name='d_h1_conv', reuse=reuse)), name="d_bn_h1")
             h2 = tf.layers.batch_normalization(self.lrelu(tf.layers.conv2d(h1, filters=256, kernel_size=[4,4], strides=(2,2), padding='SAME', name='d_h2_conv', reuse=reuse)), name="d_bn_h2")
-            h3 = tf.layers.batch_normalization(self.lrelu(tf.layers.conv2d(h2, filters=512, kernel_size=[4,4], strides=(2,2), padding='SAME', name='d_h3_conv', reuse=reuse)), name="d_bn_h3")
-            h4 = tf.layers.batch_normalization(self.lrelu(tf.layers.conv2d(h3, filters=512, kernel_size=[4,4], strides=(2,2), padding='SAME', name='d_h4_conv', reuse=reuse)), name="d_bn_h4")
-            out = tf.layers.dense(tf.reshape(h4,[-1,8*8*512]), 1, name='d_dense_layer', reuse=reuse)
-            #out = tf.layers.conv2d(self.lrelu(h4), 1, kernel_size=[4,4], strides=(1,1), padding='SAME', name='d_out_conv', reuse=reuse)
+            h3 = tf.layers.batch_normalization(self.lrelu(tf.layers.conv2d(h2, filters=512, kernel_size=[4,4], strides=(1,1), padding='SAME', name='d_h3_conv', reuse=reuse)), name="d_bn_h3")
+            out = tf.layers.conv2d(self.lrelu(h3), 1, kernel_size=[4,4], strides=(1,1), padding='SAME', name='d_out_conv', reuse=reuse)
             return out
 
     def genereter(self, x, name, reuse=False):
@@ -124,7 +122,7 @@ class model():
             d5 = tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.nn.relu(tf.concat([d4,e2], axis=3)), filters=128, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_dec_d5", reuse=reuse))
             d6 = tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.nn.relu(tf.concat([d5,e1], axis=3)), filters=64, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_dec_d6", reuse=reuse))
             d7 = tf.layers.batch_normalization(tf.layers.conv2d_transpose(tf.nn.relu(tf.concat([d6,e0], axis=3)), filters=3, kernel_size=[4,4], strides=(2,2), padding="SAME", name="g_dec_d7", reuse=reuse))
-            return d7
+            return tf.nn.tanh(d7)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
