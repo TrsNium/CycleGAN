@@ -57,18 +57,10 @@ class model():
 
                 realX, realY = sample_X_Y(256, 3, self.args.Xdir, self.args.Ydir, self.args.batch_size)
                 f_loss, _ = sess.run([self.f_loss, opt_f], feed_dict={self.realX:realX, self.realY:realY})
-                f_loss, _ = sess.run([self.f_loss, opt_f], feed_dict={self.realX:realX, self.realY:realY})
-
-                realX, realY = sample_X_Y(256, 3, self.args.Xdir, self.args.Ydir, self.args.batch_size)
                 dx_loss, _ = sess.run([self.dx_loss, opt_dx], feed_dict={self.realX:realX, self.realY:realY})
-
-                realX, realY = sample_X_Y(256, 3, self.args.Xdir, self.args.Ydir, self.args.batch_size) 
-                g_loss, _ = sess.run([self.g_loss, opt_g], feed_dict={self.realX:realX, self.realY:realY})
                 g_loss, _ = sess.run([self.g_loss, opt_g], feed_dict={self.realX:realX, self.realY:realY})   
- 
-                realX, realY = sample_X_Y(256, 3, self.args.Xdir, self.args.Ydir, self.args.batch_size) 
-                dy_loss, _ = sess.run([self.dy_loss, opt_dy], feed_dict={self.realX:realX, self.realY:realY})               
-
+                dy_loss, _ = sess.run([self.dy_loss, opt_dy], feed_dict={self.realX:realX, self.realY:realY})                
+                
                 if l%50==0 and self.args.visualize:
                     t_realX, t_realY = sample_X_Y(256, 3, self.args.Xdir, self.args.Ydir, self.args.batch_size)
                     t_fakeX, t_fakeY = sess.run([self.fakeX, self.fakeY], feed_dict={self.realX:t_realX, self.realY:t_realY})
@@ -127,8 +119,8 @@ class model():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("--lr", dest="lr", type=float, default= 0.0002)
-    parser.add_argument("--xdir", dest="Xdir", default="./Xdir_256/")
-    parser.add_argument("--ydir", dest="Ydir", default="./Ydir_256/")
+    parser.add_argument("--xdir", dest="Xdir", default="./Xdir/")
+    parser.add_argument("--ydir", dest="Ydir", default="./Ydir/")
     parser.add_argument("--itrs", dest="itrs", type=int, default=3000000)
     parser.add_argument("--batch_size", dest="batch_size", type=int, default=1)
     parser.add_argument("--visualize", dest="visualize", type=bool, default=True)
